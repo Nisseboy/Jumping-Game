@@ -394,7 +394,10 @@ class Game {
     text(world.text.text == "*" ? this.level.index : world.text.text, (world.text.pos.x - this.cam.x) * size, (world.text.pos.y - this.cam.y) * size);
 
     textAlign(RIGHT, TOP);
+    textSize(size / 2);
     text(formatTime(this.time / fps), width, 0);
+    fill(255, 255, 100);
+    text(formatTime(this.world.goldTime.time), width, size / 2);
     pop();
 
     noSmooth();
