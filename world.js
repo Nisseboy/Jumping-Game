@@ -10,6 +10,7 @@ class World {
       this.player = {pos: data.player.pos};
       this.key = {pos: data.key.pos};
       this.door = data.door;
+      this.text = data.text;
     } else {
       this.w = w;
       this.h = h;
@@ -26,6 +27,11 @@ class World {
 
       this.door = {
         pos: new Vec(15, 6),
+      };
+
+      this.text = {
+        pos: new Vec(8, 3),
+        text: "*",
       };
     }
 
@@ -51,6 +57,11 @@ class World {
 
     this.door = {
       pos: new Vec().from(this.door.pos),
+    };
+
+    this.text = {
+      pos: new Vec().from(this.text? this.text.pos : {x: 8, y: 3}),
+      text: this.text?.text || "*",
     };
   }
 
@@ -104,6 +115,7 @@ class World {
     data.player = {pos: this.player.pos};
     data.key = {pos: this.key.pos};
     data.door = this.door;
+    data.text = this.text;
 
     return JSON.stringify(data);
   }

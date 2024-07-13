@@ -50,9 +50,10 @@ class Game {
 
     this.doorState = 1;
     this.enterState = 0;
+    this.particles = [];
     framesEvents.push({length: enterTime + 1, callback: e => {this.enterState++;}});
 
-    if (level.index >= unlockWallJump) this.unlockWallJump = true;
+    this.unlockWallJump = level.index >= unlockWallJump
   }
 
   keyPressed(e) {
@@ -79,6 +80,8 @@ class Game {
     if (this.enterState > enterTime) {
       this.updatePlayer();
     }
+
+    this.updateParticles();
 
     this.render();
   }
@@ -232,6 +235,32 @@ class Game {
     if (!this.unlockWallJump) p.walled = 0;
   }
 
+  collideMoveVector(pos, vel) {
+    let step = 0.005;
+
+    for (let i = 0; i < Math.abs(vel.x); i += step) {
+      pos.x += step * Math.sign(vel.x);
+
+      let colls = this.doesCollide({x: pos.x, y: pos.y, z: 0, w: 0});
+      if (colls.length == 0) continue;
+
+      pos.x -= step * Math.sign(vel.x);
+      vel.x = 0;
+      break;
+    }
+
+    for (let i = 0; i < Math.abs(vel.y); i += step) {
+      pos.y += step * Math.sign(vel.y);
+
+      let colls = this.doesCollide({x: pos.x, y: pos.y, z: 0, w: 0});
+      if (colls.length == 0) continue;
+
+      pos.y -= step * Math.sign(vel.y);
+      vel.y *= -0.4;
+      break;
+    }
+  }
+
   doesCollide(box) {
     let w = this.world;
 
@@ -249,6 +278,69 @@ class Game {
     return pts;
   }
 
+  updateParticles() {
+    let world = this.world;
+    let player = world.player;
+
+    if (frameCount % 7 == 0) {
+      this.particles.push({
+        pos: new Vec(Math.random() * 16 + this.cam.x, Math.random() * 9 + this.cam.y),
+        size: 1 / 32,
+        time: 600,
+        c: 200,
+        rps: 0.2,
+        vel: new Vec(Math.random() * 0.02 - 0.01, -0.02),
+
+        gravity: 0.01,
+      });
+    }
+
+    if (!world.key.pickedUp && frameCount % 7 == 0) {
+      this.particles.push({
+        pos: world.key.pos.copy(),
+        size: 1 / 32,
+        time: 80,
+        c: "#ffcc35",
+        rps: 0.5,
+        vel: new Vec(Math.random() * 0.02 - 0.01, Math.random() * 0.03 - 0.03),
+
+        gravity: 0.1,
+
+        physics: true,
+      });
+    }
+
+    if (player.vel.x != 0 && player.grounded && frameCount % 3 == 0) {
+      this.particles.push({
+        pos: player.pos.copy(),
+        size: 1 / 32,
+        time: 80,
+        c: this.theme[1],
+        rps: 0.5,
+        vel: new Vec(Math.random() * 0.02 - 0.01, Math.random() * 0.04 - 0.04),
+
+        gravity: 0.1,
+
+        physics: true,
+      });
+    }
+
+    for (let i = 0; i < this.particles.length; i++) {
+      let p = this.particles[i];
+      p.time--;
+      p.rot = (p.rot || 0) + (p.rps || 0) / fps * Math.PI * 2;
+
+      if (p.vel) { 
+        p.vel.addV(new Vec(0, gravity * p.gravity / fps));
+         
+        if (p.physics) this.collideMoveVector(p.pos, p.vel);
+        else p.pos.addV(p.vel);
+      }
+
+      if (p.time == 0) { this.particles.splice(i, 1); i--; }
+    }
+  }
+
   render() {
     let world = this.world;
     let player = world.player;
@@ -258,6 +350,16 @@ class Game {
     if (this.enterState > enterTime) background(this.theme[0]);
     else {
       this.noiseEffect();
+    }
+
+    for (let i of this.particles) {
+      push();
+      translate((i.pos.x - this.cam.x) * size, (i.pos.y - this.cam.y) * size);
+      rotate(i.rot);
+      noStroke();
+      fill(i.c);
+      rect(-i.size / 2, -i.size / 2, i.size * size, i.size * size);
+      pop();
     }
 
     noStroke();
@@ -275,10 +377,16 @@ class Game {
     }
     if (this.enterState <= enterTime) return;
 
-    if (!world.key.pickedUp) image(textures["key1"], (world.key.pos.x - this.cam.x - 0.25) * size, (world.key.pos.y - this.cam.y - 0.25) * size, size / 2, size / 2);
+    if (!world.key.pickedUp) image(textures["key1"], (world.key.pos.x - this.cam.x - 0.25) * size, (world.key.pos.y - this.cam.y - 0.25 + (Math.sin(frameCount / 10) / 20)) * size, size / 2, size / 2);
 
     image(textures["door" + this.doorState], (world.door.pos.x - this.cam.x) * size, (world.door.pos.y - this.cam.y) * size, size, size);
 
+    push();
+    textSize(size);
+    textAlign(CENTER, CENTER);
+    fill(this.theme[1]);
+    text(world.text.text == "*" ? this.level.index : world.text.text, (world.text.pos.x - this.cam.x) * size, (world.text.pos.y - this.cam.y) * size);
+    pop();
 
     noSmooth();
     let texture = "idle";

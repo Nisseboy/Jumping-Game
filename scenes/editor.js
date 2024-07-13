@@ -49,6 +49,9 @@ class Editor {
     if (m._subV(world.door.pos._addV(new Vec(0.5, 0.5))).sqMag() < 0.5 ** 2) {
       this.hovered = world.door;
     }
+    if (m._subV(world.text.pos).sqMag() < 0.5 ** 2) {
+      this.hovered = world.text;
+    }
 
 
     textButtons.push({
@@ -208,9 +211,14 @@ class Editor {
     if (this.enterState <= enterTime) return;
 
     image(textures["key1"], (world.key.pos.x - this.cam.x - 0.25) * size, (world.key.pos.y - this.cam.y - 0.25) * size, size / 2, size / 2);
-
     image(textures["door" + this.doorState], (world.door.pos.x - this.cam.x) * size, (world.door.pos.y - this.cam.y) * size, size, size);
 
+    push();
+    textSize(size);
+    textAlign(CENTER, CENTER);
+    fill(this.theme[1]);
+    text(world.text.text == "*" ? this.level.index : world.text.text, (world.text.pos.x - this.cam.x) * size, (world.text.pos.y - this.cam.y) * size);
+    pop();
 
     noSmooth();
     image(textures["player/idle"], (player.pos.x - this.cam.x - 0.5) * size, (player.pos.y - this.cam.y - 1) * size, size * Math.sign(player.lastDir), size);
@@ -223,6 +231,7 @@ class Editor {
 
       if (hovered == world.key) pos = pos._sub(0.5);
       if (hovered == world.player) pos = pos._subV(new Vec(0.5, 1));
+      if (hovered == world.text) pos = pos._sub(0.5);
 
       rect((pos.x - this.cam.x) * size, (pos.y - this.cam.y) * size, size, size);
     }
