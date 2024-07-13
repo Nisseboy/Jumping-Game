@@ -20,7 +20,7 @@ class LevelSelector {
         fill(51, 51, 51);
       }
       if (i == completedLevels) {
-        fill(200, 255, 200);
+        fill(0, 200, 200);
       }
       if (i < completedLevels) {
         let goldTime = (JSON.parse(levels[i]).goldTime?.time || 999) + 0.01;
@@ -29,7 +29,7 @@ class LevelSelector {
           if (time < goldTime) fill(255, 255, 100);
           else if (time - 1 < goldTime) fill(200, 200, 200);
           else if (time - 2 < goldTime) fill(199, 123, 48);
-        } else fill(255, 0, 0);
+        } else fill(200, 0, 200);
       }
       rect(x, y, w, w);
       pop();
