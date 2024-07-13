@@ -101,6 +101,7 @@ class Editor {
 
   mousePressed(e) {
     this.dragged = this.hovered;
+    this.mouseDownPos = new Vec(mouseX, mouseY);
     this.mouseDragged(e);
   }
   mouseDragged(e) {
@@ -159,6 +160,13 @@ class Editor {
     }
   }
   mouseReleased() {
+    let world = this.world;
+
+    if (this.dragged == world.text && this.mouseDownPos.x == mouseX && this.mouseDownPos.y == mouseY) {
+      let n = prompt("New Text");
+      if (n) world.text.text = n;
+    }
+
     this.dragged = undefined;
   }
 
