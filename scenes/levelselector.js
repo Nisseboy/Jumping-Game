@@ -11,6 +11,8 @@ class LevelSelector {
 
     let w = 100;
     for (let i = 0; i < levels.length; i++) {
+      let time = levelTimes[i];
+
       push();
       strokeWeight(5);
       stroke(250, 250, 0);
@@ -21,7 +23,6 @@ class LevelSelector {
         fill(200, 255, 200);
       }
       if (i < completedLevels) {
-        let time = levelTimes[i];
         let goldTime = (JSON.parse(levels[i]).goldTime?.time || 999) + 0.01;
         
         if (time) {
@@ -38,6 +39,11 @@ class LevelSelector {
       textSize(40);
       textAlign(CENTER, CENTER);
       text(i, x + w / 2, y + w / 2);
+      
+      textSize(20);
+      textAlign(CENTER, BOTTOM);
+      fill(0);
+      if (time) text(formatTime(time), x + w / 2, y + w);
       pop();
 
       if (i <= completedLevels || this.scene == editor) {
