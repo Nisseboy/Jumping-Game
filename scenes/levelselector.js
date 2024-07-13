@@ -28,8 +28,8 @@ class LevelSelector {
         if (time) {
           if (time < goldTime) fill(255, 255, 100);
           else if (time - 1 < goldTime) fill(200, 200, 200);
-          else if (time - 2 < goldTime) fill(199, 123, 48);
-        } else fill(200, 0, 200);
+          else fill(199, 123, 48);
+        }
       }
       rect(x, y, w, w);
       pop();
