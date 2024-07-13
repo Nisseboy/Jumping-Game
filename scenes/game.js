@@ -51,6 +51,7 @@ class Game {
     this.doorState = 1;
     this.enterState = 0;
     this.particles = [];
+    this.time = 0;
     framesEvents.push({length: enterTime + 1, callback: e => {this.enterState++;}});
 
     this.unlockWallJump = level.index >= unlockWallJump
@@ -79,6 +80,8 @@ class Game {
   update() {
     if (this.enterState > enterTime) {
       this.updatePlayer();
+
+      this.time++;
     }
 
     this.updateParticles();
@@ -147,17 +150,20 @@ class Game {
       framesEvents.push({length: 6, callback: e => {this.doorState ++}});
     }
     if (world.key.pickedUp && (world.door.pos.x - player.pos.x + 0.5) ** 2 + (world.door.pos.y - player.pos.y + 1) ** 2 < 0.5 ** 2) {
-      if (this.level.index == 80085) { setScene(editor); return; }
+      if (this.level.index == 80085) { setScene(editor); editor.world.goldTime.time = this.time / fps; return; }
+
+      if (completedLevels < this.level.index + 1) {
+        completedLevels = this.level.index + 1;
+        localStorage.setItem("completedLevels", completedLevels);
+      }
+      levelTimes[this.level.index] = Math.min(levelTimes[this.level.index] || 99999, this.time / fps);
+      localStorage.setItem("levelTimes", JSON.stringify(levelTimes));
 
       if (this.level.index == levels.length - 1) {
         setScene(winScreen);
         return;
       }
 
-      if (completedLevels < this.level.index + 1) {
-        completedLevels = this.level.index + 1;
-        localStorage.setItem("completedLevels", completedLevels);
-      }
       this.setLevel({data: levels[this.level.index + 1], index: this.level.index + 1});
       return;
     }
@@ -386,6 +392,9 @@ class Game {
     textAlign(CENTER, CENTER);
     fill(this.theme[1]);
     text(world.text.text == "*" ? this.level.index : world.text.text, (world.text.pos.x - this.cam.x) * size, (world.text.pos.y - this.cam.y) * size);
+
+    textAlign(RIGHT, TOP);
+    text(formatTime(this.time / fps), width, 0);
     pop();
 
     noSmooth();
@@ -421,4 +430,10 @@ class Game {
     noSmooth();
     image(img, 0, 0, width, height);
   }
+}
+
+function formatTime(t) {
+  let s = (Math.floor(t * 10) / 10).toString();
+  if (s.split(".").length == 1) s += ".0";
+  return s;
 }

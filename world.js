@@ -11,6 +11,7 @@ class World {
       this.key = {pos: data.key.pos};
       this.door = data.door;
       this.text = data.text;
+      this.goldTime = data.goldTime;
     } else {
       this.w = w;
       this.h = h;
@@ -32,6 +33,10 @@ class World {
       this.text = {
         pos: new Vec(8, 3),
         text: "*",
+      };
+
+      this.goldTime = {
+        time: 999,
       };
     }
 
@@ -62,6 +67,10 @@ class World {
     this.text = {
       pos: new Vec().from(this.text? this.text.pos : {x: 8, y: 3}),
       text: this.text?.text || "*",
+    };
+
+    this.goldTime = {
+      time: this.goldTime?.time || 999,
     };
   }
 
@@ -116,6 +125,7 @@ class World {
     data.key = {pos: this.key.pos};
     data.door = this.door;
     data.text = this.text;
+    data.goldTime = this.goldTime;
 
     return JSON.stringify(data);
   }
