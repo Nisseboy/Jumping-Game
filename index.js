@@ -22,6 +22,7 @@ let controls = {
   "Move Up": 87,
   "Move Down": 83,
   "Restart": 82,
+  "Kobojsarläge": 75,
   "Jump": 32,
   "Dash": 16,
   "Exit": 27,
@@ -29,31 +30,64 @@ let controls = {
 
 let devMode = localStorage.getItem("devMode") || false;
 
+let ogPixels = {};
+
+let skins = {
+  cowboy: [
+    [255, 219, 178], //Skin
+    [72, 73, 145], //Shirt
+    [188, 110, 37], //Pants
+    [145, 85, 29], //Shoes
+    [122, 70, 24], //Hat
+  ],
+  green: [
+    [73, 255, 53], //Skin
+    [73, 255, 53], //Shirt
+    [73, 255, 53], //Pants
+    [73, 255, 53], //Shoes
+    [73, 255, 53, 0], //Hat
+  ],
+};
+
 function preload() {
   for (let i in textures) {
     textures[i] = loadImage(textures[i]);
   }
 }
-function setPlayerColor(c) {
-  for (let i in textures) {
-    let j = textures[i];
-    if (!i.includes("player")) continue;
+function setPlayerSkin(skin) {
+  for (let textureIndex in textures) {
+    let texture = textures[textureIndex];
+    if (!textureIndex.includes("player")) continue;
     
-    j.loadPixels();
-    for (let k = 0; k < j.pixels.length; k += 4) {
-      if (j.pixels[k + 3]) {
-        j.pixels[k  ] = c[0];
-        j.pixels[k+1] = c[1];
-        j.pixels[k+2] = c[2];
-      }
+    texture.loadPixels();
+    let pix = texture.pixels;
+    let ogPix = ogPixels[textureIndex];
+    if (!ogPix) continue;
+
+    for (let i = 0; i < pix.length; i += 4) {
+      let colorIndex = skins.cowboy.findIndex(e => {return e[0] == ogPix[i] && e[1] == ogPix[i+1] && e[2] == ogPix[i+2]});
+      if (colorIndex == -1) continue;
+
+      pix[i] = skin[colorIndex][0];
+      pix[i+1] = skin[colorIndex][1];
+      pix[i+2] = skin[colorIndex][2];
+      pix[i+3] = skin[colorIndex][3] == undefined ? 255 : skin[colorIndex][3];
     }
-    j.updatePixels();
+
+    texture.updatePixels();
   }
 }
 
 function setup() {
   createCanvas(1, 1);
   windowResized();
+
+  for (let i in textures) {
+    textures[i].loadPixels();
+    ogPixels[i] = JSON.parse(JSON.stringify(textures[i].pixels));
+  }
+
+  setPlayerSkin(skins.green);
 
   editor = new Editor();
   winScreen = new WinScreen();
