@@ -291,7 +291,7 @@ class Game {
     if (frameCount % 7 == 0) {
       this.particles.push({
         pos: new Vec(Math.random() * 16 + this.cam.x, Math.random() * 9 + this.cam.y),
-        size: 1 / 32,
+        size: 1 / 64,
         time: 600,
         c: 200,
         rps: 0.2,
