@@ -22,6 +22,7 @@ let controls = {
   "Move Up": 87,
   "Move Down": 83,
   "Jump": 32,
+  "Dash": 16,
   "Exit": 27,
 };
 

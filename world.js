@@ -52,7 +52,9 @@ class World {
 
       lastDir: 1,
 
-      dash: undefined,
+      dashGrace: 0,
+      dash: 0,
+      dashCooldown: 0,
     };
 
     this.key = {

@@ -9,6 +9,11 @@ let playerJumpStrength = 12;
 let graceTime = 1 / 10;
 let coyoteTime = 1 / 10;
 
+let playerDashTime = 0.25;
+let playerDashSpeed = 20;
+let dashGraceTime = 1 / 10;
+let dashCooldown = 0.5;
+
 let wallJumpStrength = 4;
 let wallJumpTime = 1 / 5;
 
@@ -55,6 +60,7 @@ class Game {
     framesEvents.push({length: enterTime + 1, callback: e => {this.enterState++;}});
 
     this.unlockWallJump = level.index >= unlockWallJump
+    this.unlockDash = level.index >= unlockDash
   }
 
   keyPressed(e) {
@@ -62,6 +68,9 @@ class Game {
 
     if (e.keyCode == getKey("Jump") && this.enterState > enterTime) {
       p.graceTime = graceTime * fps;
+    }
+    if (e.keyCode == getKey("Dash") && this.enterState > enterTime && this.unlockDash) {
+      p.dashGraceTime = dashGraceTime * fps;
     }
   }
   keyReleased(e) {
@@ -124,9 +133,24 @@ class Game {
     }
 
 
+    if (player.dashGraceTime && !player.dashCooldown) {
+      player.dash = playerDashTime * fps * (getKeyPressed("Move Right") - getKeyPressed("Move Left"));
+
+      player.dashCooldown = dashCooldown * fps;
+      player.dashGraceTime = 0;
+    }
+    if (player.dash) {
+      player.vel.x = Math.sign(player.dash) * playerDashSpeed / fps;
+    }
+
+
     if (player.grounded) player.grounded--;
     if (player.inWallJump) player.inWallJump -= Math.sign(player.inWallJump);
     if (player.graceTime) player.graceTime--;
+
+    if (player.dashGraceTime) player.dashGraceTime--;
+    if (player.dashCooldown) player.dashCooldown--;
+    if (player.dash) player.dash -= Math.sign(player.dash);
 
 
     let maxFallSpeed_ = maxFallSpeed;
@@ -143,6 +167,7 @@ class Game {
       player.vel.y = maxFallSpeed_;
     }
 
+    if (player.dash) { player.vel.y = 0; }
     game.movePlayer();
 
     if (!world.key.pickedUp && (world.key.pos.x - player.pos.x) ** 2 + (world.key.pos.y - player.pos.y + playerH / 2) ** 2 < keyPickupRange ** 2) {
@@ -329,6 +354,23 @@ class Game {
 
         physics: true,
       });
+    }
+
+    if (player.dash) {
+      for (let i = 0; i < 10; i++) {
+        this.particles.push({
+          pos: player.pos._subV(new Vec(0, playerH * i / 10)),
+          size: 1 / 32,
+          time: 80,
+          c: 255,
+          rps: 0.5,
+          vel: new Vec(Math.random() * 0.02 - 0.01, Math.random() * 0.04 - 0.04),
+
+          gravity: 0.1,
+
+          physics: true,
+        });
+      }
     }
 
     for (let i = 0; i < this.particles.length; i++) {
