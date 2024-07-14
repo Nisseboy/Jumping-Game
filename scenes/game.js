@@ -500,7 +500,7 @@ class Game {
 
           let dir = new Vec(Math.cos(a), Math.sin(a));
 
-          if (this.frame % Math.floor(fps / data.sps) == 0) {
+          if (this.time % Math.floor(fps / data.sps) == 0) {
             this.particles.push({
               pos: new Vec(x + 0.5, y + 0.5).addV(dir._mul(0.5)),
               size: 1 / 8,
