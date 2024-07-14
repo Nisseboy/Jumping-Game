@@ -4,7 +4,7 @@ class World {
       let data = JSON.parse(w);
       this.w = data.w;
       this.h = data.h;
-  
+      
       this.g = data.g;
   
       this.player = {pos: data.player.pos};
