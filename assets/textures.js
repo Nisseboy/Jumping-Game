@@ -21,8 +21,6 @@ let textures = {
   
 }
 
-
-
 for (let i = 0; i < folders.length; i += 2) {
   let path = folders[i];
   let names = folders[i + 1].split(",");

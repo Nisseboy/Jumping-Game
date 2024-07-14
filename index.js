@@ -34,6 +34,22 @@ function preload() {
     textures[i] = loadImage(textures[i]);
   }
 }
+function setPlayerColor(c) {
+  for (let i in textures) {
+    let j = textures[i];
+    if (!i.includes("player")) continue;
+    
+    j.loadPixels();
+    for (let k = 0; k < j.pixels.length; k += 4) {
+      if (j.pixels[k + 3]) {
+        j.pixels[k  ] = c[0];
+        j.pixels[k+1] = c[1];
+        j.pixels[k+2] = c[2];
+      }
+    }
+    j.updatePixels();
+  }
+}
 
 function setup() {
   createCanvas(1, 1);

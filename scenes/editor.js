@@ -18,6 +18,8 @@ class Editor {
       this.theme[2] = colors[Math.floor(Math.random() * colors.length)];
     } while(this.theme[0] == this.theme[2] || this.theme[1] == this.theme[2])
 
+    setPlayerColor(this.theme[1]);
+
     this.doorState = 1;
     this.enterState = 0;
     framesEvents.push({length: enterTime + 1, callback: e => {this.enterState++;}});

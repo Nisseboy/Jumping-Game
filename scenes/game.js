@@ -55,6 +55,8 @@ class Game {
       this.theme[2] = colors[Math.floor(Math.random() * colors.length)];
     } while(this.theme[0] == this.theme[2] || this.theme[1] == this.theme[2])
 
+    setPlayerColor(this.theme[1]);
+
     this.doorState = 1;
     this.enterState = 0;
     this.particles = [];
@@ -211,7 +213,7 @@ class Game {
     let w = this.world;
     let p = w.player;
 
-    let step = 0.01;
+    let step = 0.005;
 
     function allPointsHave(colls, prop) {
       let have = true;
@@ -284,7 +286,7 @@ class Game {
           this.particles.push({
             pos: p.pos._subV(new Vec(0, step * Math.sign(p.vel.y))),
             size: 1 / 16,
-            time: 80,
+            time: Math.floor(Math.random() * 40) + 40,
             c: this.theme[1],
             rps: 0.5,
             vel: new Vec(Math.random() * 0.04 - 0.02, Math.random() * 0.02 - 0.02),
