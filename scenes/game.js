@@ -78,7 +78,7 @@ class Game {
       this.restart();
     }
 
-    if (e.keyCode == getKey("Kobojsarläge")) setPlayerSkin(skins.cowboy);
+    if (e.keyCode == getKey("Kobojsarläge")) nextSkin();
   }
   keyReleased(e) {
     let p = this.world.player;

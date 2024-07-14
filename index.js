@@ -32,6 +32,7 @@ let devMode = localStorage.getItem("devMode") || false;
 
 let ogPixels = {};
 
+let currentSkin;
 let skins = {
   cowboy: [
     [255, 219, 178], //Skin
@@ -54,7 +55,15 @@ function preload() {
     textures[i] = loadImage(textures[i]);
   }
 }
-function setPlayerSkin(skin) {
+function nextSkin() {
+  let keys = Object.keys(skins);
+  let index = keys.indexOf(currentSkin);
+  index = (index + 1) % keys.length;
+  setPlayerSkin(keys[index]);
+}
+function setPlayerSkin(skinName) {
+  let skin = skins[skinName];
+
   for (let textureIndex in textures) {
     let texture = textures[textureIndex];
     if (!textureIndex.includes("player")) continue;
@@ -76,6 +85,9 @@ function setPlayerSkin(skin) {
 
     texture.updatePixels();
   }
+
+  currentSkin = skinName;
+  localStorage.setItem("currentSkin", currentSkin);
 }
 
 function setup() {
@@ -87,7 +99,7 @@ function setup() {
     ogPixels[i] = JSON.parse(JSON.stringify(textures[i].pixels));
   }
 
-  setPlayerSkin(skins.green);
+  setPlayerSkin(localStorage.getItem("currentSkin") || "green");
 
   editor = new Editor();
   winScreen = new WinScreen();
