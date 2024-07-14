@@ -60,7 +60,7 @@ class Game {
   keyPressed(e) {
     let p = this.world.player;
 
-    if (e.keyCode == getKey("Jump")) {
+    if (e.keyCode == getKey("Jump") && this.enterState > enterTime) {
       p.graceTime = graceTime * fps;
     }
   }

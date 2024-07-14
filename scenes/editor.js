@@ -132,6 +132,7 @@ class Editor {
           w.player.pos.x += d;
           w.key.pos.x += d;
           w.door.pos.x += d;
+          w.text.pos.x += d;
 
           this.cam.x += d;
         }
@@ -143,6 +144,7 @@ class Editor {
           w.player.pos.y += d;
           w.key.pos.y += d;
           w.door.pos.y += d;
+          w.text.pos.y += d;
 
           this.cam.y += d;
         }
