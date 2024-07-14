@@ -23,4 +23,21 @@ let blocks = [
     hitbox: "circle",
     draw: (pos, data) => {ellipse(pos.x + pos.z / 2, pos.y + pos.w / 2, pos.z, pos.w)}
   },
+  {//Turret
+    outline: false,
+    shoot: true,
+    hitbox: "none",
+    draw: (pos, data) => {
+      let size = width / (scene == editor ? 32 : 16);
+
+      ellipse(pos.x + pos.z / 2, pos.y + pos.w / 2, pos.z * 0.75, pos.w * 0.75);
+      let a = 0;
+      if (data) {a = data.a + data.rps * Math.PI * 2 * (scene == editor ? 0 : game.time) / fps}
+
+      strokeWeight(size / 8);
+      stroke(0);
+      line(pos.x + pos.z / 2, pos.y + pos.w / 2, pos.x + pos.z / 2 + Math.cos(a) * size / 2, pos.y + pos.w / 2 + Math.sin(a) * size / 2);
+    },
+    defaultData: {a: 0, rps: 0.5, sps: 10},
+  },
 ];

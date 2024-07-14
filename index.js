@@ -21,6 +21,7 @@ let controls = {
   "Move Right": 68,
   "Move Up": 87,
   "Move Down": 83,
+  "Restart": 82,
   "Jump": 32,
   "Dash": 16,
   "Exit": 27,

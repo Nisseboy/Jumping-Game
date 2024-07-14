@@ -74,6 +74,9 @@ class Game {
     if (e.keyCode == getKey("Dash") && this.enterState > enterTime && this.unlockDash) {
       p.dashGraceTime = dashGraceTime * fps;
     }
+    if (e.keyCode == getKey("Restart")) {
+      this.restart();
+    }
   }
   keyReleased(e) {
     let p = this.world.player;
@@ -275,6 +278,22 @@ class Game {
       if (point == 2 || point == 3) {
         p.grounded = coyoteTime * fps;
         p.inJump = false;
+
+        for (let j = 0; j < Math.abs(p.vel.y * 50); j++) {
+          if (j == 0) continue;
+          this.particles.push({
+            pos: p.pos._subV(new Vec(0, step * Math.sign(p.vel.y))),
+            size: 1 / 16,
+            time: 80,
+            c: this.theme[1],
+            rps: 0.5,
+            vel: new Vec(Math.random() * 0.04 - 0.02, Math.random() * 0.02 - 0.02),
+  
+            gravity: 0.1,
+  
+            physics: true,
+          });
+        }
       }
 
       if (allPointsHave(colls, "hurt")) {
@@ -293,6 +312,7 @@ class Game {
 
   collideMoveVector(pos, vel) {
     let step = 0.005;
+    let hit = false;
 
     for (let i = 0; i < Math.abs(vel.x); i += step) {
       pos.x += step * Math.sign(vel.x);
@@ -301,7 +321,8 @@ class Game {
       if (colls.length == 0) continue;
 
       pos.x -= step * Math.sign(vel.x);
-      vel.x = 0;
+      vel.x *= -0.4;
+      hit = true;
       break;
     }
 
@@ -313,8 +334,11 @@ class Game {
 
       pos.y -= step * Math.sign(vel.y);
       vel.y *= -0.4;
+      hit = true;
       break;
     }
+
+    return hit;
   }
 
   doesCollide(box) {
@@ -327,6 +351,7 @@ class Game {
       if (block == 0) return false;
 
       if (blocks[block].hitbox == "circle") { return ((e.pt[0] % 1 - 0.5) ** 2 + (e.pt[1] % 1 - 0.5) ** 2 < 0.5 ** 2); }
+      if (blocks[block].hitbox == "none") return false;
 
       return true;
     });
@@ -340,10 +365,12 @@ class Game {
     let world = this.world;
     let player = world.player;
 
+    let size = width / 16;
+
     if (frameCount % 7 == 0) {
       this.particles.push({
         pos: new Vec(Math.random() * 16 + this.cam.x, Math.random() * 9 + this.cam.y),
-        size: 1 / 64,
+        size: 3 / size,
         time: 600,
         c: 200,
         rps: 0.2,
@@ -356,7 +383,7 @@ class Game {
     if (!world.key.pickedUp && frameCount % 7 == 0) {
       this.particles.push({
         pos: world.key.pos.copy(),
-        size: 1 / 32,
+        size: 6  / size,
         time: 80,
         c: "#ffcc35",
         rps: 0.5,
@@ -371,7 +398,7 @@ class Game {
     if (player.vel.x != 0 && player.grounded && frameCount % 3 == 0) {
       this.particles.push({
         pos: player.pos.copy(),
-        size: 1 / 32,
+        size: 6 / size,
         time: 80,
         c: this.theme[1],
         rps: 0.5,
@@ -387,7 +414,7 @@ class Game {
       for (let i = 0; i < 10; i++) {
         this.particles.push({
           pos: player.pos._subV(new Vec(0, playerH * i / 10)),
-          size: 1 / 32,
+          size: 6 / size,
           time: 80,
           c: 255,
           rps: 0.5,
@@ -408,8 +435,21 @@ class Game {
       if (p.vel) { 
         p.vel.addV(new Vec(0, gravity * p.gravity / fps));
          
-        if (p.physics) this.collideMoveVector(p.pos, p.vel);
+        let hit = false;
+        if (p.physics) hit = this.collideMoveVector(p.pos, p.vel);
         else p.pos.addV(p.vel);
+        
+        if (p.physics == "bullet") {
+          if (hit) {
+            this.particles.splice(i, 1);
+            i--;
+            continue;
+          }
+
+          if ((p.pos.x - player.pos.x) ** 2 + (p.pos.y - player.pos.y + playerH / 2) ** 2 < playerW ** 2) {
+            this.restart();
+          }
+        }
       }
 
       if (p.time == 0) { this.particles.splice(i, 1); i--; }
@@ -442,16 +482,38 @@ class Game {
     for (let x = 0; x < world.w; x++) {
       for (let y = 0; y < world.h; y++) {
         let block = world.g[x][y];
-        if (block[0]) {
-          push();
-          if (block[0] != 1) fill(this.theme[2]);
-          blocks[block[0]].draw(new Vec((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5), block[1]);
+        if (!block[0]) continue;
 
-          if (block[0] != 1) stroke(this.theme[2]);
-          else stroke(this.theme[1]);
-          noFill();
-          if (blocks[block[0]].outline) rect((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5);
-          pop();
+        push();
+        if (block[0] != 1) fill(this.theme[2]);
+        blocks[block[0]].draw(new Vec((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5), block[1]);
+
+        if (block[0] != 1) stroke(this.theme[2]);
+        else stroke(this.theme[1]);
+        noFill();
+        if (blocks[block[0]].outline) rect((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5);
+        pop();
+
+        if (this.enterState > enterTime && blocks[block[0]].shoot) {
+          let data = block[1];
+          let a = data.a + data.rps * Math.PI * 2 * (scene == editor ? 0 : this.time) / fps;
+
+          let dir = new Vec(Math.cos(a), Math.sin(a));
+
+          if (this.frame % Math.floor(fps / data.sps) == 0) {
+            this.particles.push({
+              pos: new Vec(x + 0.5, y + 0.5).addV(dir._mul(0.5)),
+              size: 1 / 8,
+              time: 6000,
+              c: [255, 100, 100],
+              rps: 0.2,
+              vel: dir._div(30),
+      
+              gravity: 0,
+
+              physics: "bullet",
+            });
+          }
         }
       }
     }

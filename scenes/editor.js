@@ -152,11 +152,17 @@ class Editor {
         m = new Vec(mouseX, mouseY).div(size).addV(this.cam);
         m.x = Math.floor(m.x);
         m.y = Math.floor(m.y);
+
+        if (w.g[m.x][m.y][0]) return;
+
         w.g[m.x][m.y] = [this.currentBlock];
+
+        let block = blocks[this.currentBlock];
+        if (block.defaultData) w.g[m.x][m.y][1] = JSON.parse(JSON.stringify(block.defaultData));
       }
       if (pressedButtons[2]) {
         if (m.x < 0 || m.x >= w.w || m.y < 0 || m.y >= w.h) return;
-
+        
         w.g[m.x][m.y] = [0];
       }
     }
@@ -164,9 +170,33 @@ class Editor {
   mouseReleased() {
     let world = this.world;
 
-    if (this.dragged == world.text && this.mouseDownPos.x == mouseX && this.mouseDownPos.y == mouseY) {
-      let n = prompt("New Text");
-      if (n) world.text.text = n;
+    let size = width / 32;
+
+    if (this.mouseDownPos.x == mouseX && this.mouseDownPos.y == mouseY) {
+      if (this.dragged == world.text) {
+        let n = prompt("New Text");
+        if (n) world.text.text = n;
+      }
+      if (!this.dragged) {
+        let m = new Vec(mouseX, mouseY).div(size).addV(this.cam);
+        m.x = Math.floor(m.x);
+        m.y = Math.floor(m.y);
+
+        if (m.x < 0 || m.x >= world.w || m.y < 0 || m.y >= world.h) return;
+
+        let block = world.g[m.x][m.y];
+        if (block[0] == 4) {
+          let data = block[1];
+          let p = prompt("Starting angle (0-360)");
+          if (p != "" && p != undefined) data.a = parseFloat(p) / 360 * Math.PI * 2;
+
+          p = prompt("Rotations per second");
+          if (p != "" && p != undefined) data.rps = parseFloat(p);
+
+          p = prompt("Shots per second");
+          if (p != "" && p != undefined) data.sps = parseFloat(p);
+        }
+      }
     }
 
     this.dragged = undefined;
