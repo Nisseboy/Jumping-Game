@@ -20,6 +20,8 @@ let wallJumpTime = 1 / 5;
 let gravity = 0.6;
 let maxFallSpeed = 0.3;
 
+let bounceFactor = 0.9;
+
 let enterTime = 24;
 
 let cameraSmoothing = 0.9;
@@ -208,6 +210,14 @@ class Game {
 
     let step = 0.01;
 
+    function allPointsHave(colls, prop) {
+      let have = true;
+      for (let i of colls) {
+        if (!blocks[i.block[0]][prop]) have = false;
+      }
+      return have;
+    }
+
     p.walled = 0;
 
     for (let i = 0; i < Math.abs(p.vel.x); i += step) {
@@ -220,6 +230,13 @@ class Game {
       let block = coll.block;
       let point = coll.point;
 
+      if (allPointsHave(colls, "bounce")) {
+        p.pos.x -= step * Math.sign(p.vel.x);
+        p.vel.x *= -bounceFactor;
+        p.dash *= -1;
+        continue;
+      }
+
       if (point == 0 || point == 2) {
         p.walled = -1;
       }
@@ -227,8 +244,8 @@ class Game {
         p.walled = 1;
       }
 
-      if (blocks[block[0]].hurt) {
-        if (!colls[1] || blocks[colls[1].block[0]].hurt) this.restart();
+      if (allPointsHave(colls, "hurt")) {
+        this.restart();
       }
 
       p.pos.x -= step * Math.sign(p.vel.x);
@@ -248,14 +265,22 @@ class Game {
       let block = coll.block;
       let point = coll.point;
 
+      if (allPointsHave(colls, "bounce")) {
+        p.pos.y -= step * Math.sign(p.vel.y);
+        p.vel.y *= -bounceFactor;
+        p.dash *= -1;
+        continue;
+      }
+
       if (point == 2 || point == 3) {
         p.grounded = coyoteTime * fps;
         p.inJump = false;
       }
 
-      if (blocks[block[0]].hurt) {
-        if (!colls[1] || blocks[colls[1].block[0]].hurt) this.restart();
-      };
+      if (allPointsHave(colls, "hurt")) {
+        this.restart()
+      }
+
 
       p.pos.y -= step * Math.sign(p.vel.y);
       p.vel.y = 0;
@@ -295,16 +320,18 @@ class Game {
   doesCollide(box) {
     let w = this.world;
 
-    let tl = w.get(box.x, box.y);
-    let tr = w.get(box.x + box.z, box.y);
-    let bl = w.get(box.x, box.y + box.w);
-    let br = w.get(box.x + box.z, box.y + box.w);
+    let pts = [[box.x, box.y], [box.x + box.z, box.y], [box.x, box.y + box.w], [box.x + box.z, box.y + box.w]];
+    
+    pts = pts.map((e, i) => {return {a: w.get(...e), i: i, pt: e}}).filter(e => {
+      let block = e.a[0];
+      if (block == 0) return false;
 
-    let pts = [];
-    if (tl[0]) pts.push( {block: tl, point: 0} );
-    if (tr[0]) pts.push( {block: tr, point: 1} );
-    if (bl[0]) pts.push( {block: bl, point: 2} );
-    if (br[0]) pts.push( {block: br, point: 3} );
+      if (blocks[block].hitbox == "circle") { return ((e.pt[0] % 1 - 0.5) ** 2 + (e.pt[1] % 1 - 0.5) ** 2 < 0.5 ** 2); }
+
+      return true;
+    });
+
+    pts = pts.map(e => {return {block: e.a, point: e.i}});
 
     return pts;
   }
@@ -417,8 +444,13 @@ class Game {
         let block = world.g[x][y];
         if (block[0]) {
           push();
-          if (block[0] == 2) fill(this.theme[2]);
+          if (block[0] != 1) fill(this.theme[2]);
           blocks[block[0]].draw(new Vec((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5), block[1]);
+
+          if (block[0] != 1) stroke(this.theme[2]);
+          else stroke(this.theme[1]);
+          noFill();
+          if (blocks[block[0]].outline) rect((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5);
           pop();
         }
       }
