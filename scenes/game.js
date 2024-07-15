@@ -254,7 +254,7 @@ class Game {
 
       p.pos.x -= step * Math.sign(p.vel.x);
       p.vel.x = 0;
-      p.inJump = false;
+      if (this.unlockWallJump) p.inJump = false;
       if (p.dash) p.dash = undefined;
       break;
     }

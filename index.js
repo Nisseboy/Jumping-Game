@@ -13,6 +13,8 @@ let textButtons = [];
 let buttons = [];
 let hoveredButton;
 
+let completedLevels;
+let levelTimes;
 
 let pressed = new Array(128).fill(false);
 let pressedButtons = new Array(128).fill(false);
@@ -108,8 +110,11 @@ function setup() {
       ];
     }
   }
-
+  
   setPlayerSkin(localStorage.getItem("currentSkin") || "green");
+
+  completedLevels = localStorage.getItem("completedLevels") || 0;
+  levelTimes = JSON.parse((localStorage.getItem("levelTimes") || "[]")).map(e => {return e ? parseFloat(e) : e});
 
   editor = new Editor();
   winScreen = new WinScreen();
@@ -198,6 +203,8 @@ function draw() {
   buttons = [];
 
   if (scene?.update) scene.update();
+
+  
 
   for (let i of textButtons) {
     push();

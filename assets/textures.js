@@ -17,10 +17,20 @@ let animations = [
   {name: "player/wall", time: 0.2, paths: ["player/wall1"]},
 ];
 
+let skins = {
+  base: {},
+  green: {},
+  cowboy: {},
+  shrek: {unlock: () => completedLevels > 23},
+  king: {unlock: () => completedLevels >= levels.length},
+  kingking: {unlock: () => {let unlocked = true; for (let i = 0; i < levels.length; i++) {if (levelTimes[i] >= (JSON.parse(levels[i]).goldTime?.time || 999) + 0.01) unlocked = false} return unlocked}},
+};
+
 let textures = {
   
 }
 
+let ogPixels = {};
 for (let i = 0; i < folders.length; i += 2) {
   let path = folders[i];
   let names = folders[i + 1].split(",");
@@ -28,13 +38,5 @@ for (let i = 0; i < folders.length; i += 2) {
     textures[path + j] = `assets/images/${path}/${j}.png`;
   }
 }
-let ogPixels = {};
 
 
-let skins = {
-  base: {},
-  green: {},
-  cowboy: {},
-  shrek: {unlock: () => completedLevels > 23},
-  king: {unlock: () => completedLevels >= levels.length},
-};
