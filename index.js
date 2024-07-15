@@ -30,29 +30,16 @@ let controls = {
 
 let devMode = localStorage.getItem("devMode") || false;
 
-let ogPixels = {};
 
 let currentSkin;
-let skins = {
-  cowboy: [
-    [255, 219, 178], //Skin
-    [72, 73, 145], //Shirt
-    [188, 110, 37], //Pants
-    [145, 85, 29], //Shoes
-    [122, 70, 24], //Hat
-  ],
-  green: [
-    [73, 255, 53], //Skin
-    [73, 255, 53], //Shirt
-    [73, 255, 53], //Pants
-    [73, 255, 53], //Shoes
-    [73, 255, 53, 0], //Hat
-  ],
-};
+
 
 function preload() {
   for (let i in textures) {
     textures[i] = loadImage(textures[i]);
+  }
+  for (let i in skins) {
+    skins[i].pixels = loadImage("assets/images/player/skins/" + i + ".png");
   }
 }
 function nextSkin() {
@@ -60,9 +47,16 @@ function nextSkin() {
   let index = keys.indexOf(currentSkin);
   index = (index + 1) % keys.length;
   setPlayerSkin(keys[index]);
+
+  let nSkin = skins[currentSkin];
+  if (nSkin.unlock) {
+    if (!nSkin.unlock()) nextSkin();
+  }
+
+  if (keys[index] == "base") nextSkin();
 }
 function setPlayerSkin(skinName) {
-  let skin = skins[skinName];
+  let skin = skins[skinName].data;
 
   for (let textureIndex in textures) {
     let texture = textures[textureIndex];
@@ -74,13 +68,13 @@ function setPlayerSkin(skinName) {
     if (!ogPix) continue;
 
     for (let i = 0; i < pix.length; i += 4) {
-      let colorIndex = skins.cowboy.findIndex(e => {return e[0] == ogPix[i] && e[1] == ogPix[i+1] && e[2] == ogPix[i+2]});
+      let colorIndex = skins.base.data.findIndex((e, idx) => {return e[0] == ogPix[i] && e[1] == ogPix[i+1] && e[2] == ogPix[i+2]});
       if (colorIndex == -1) continue;
 
       pix[i] = skin[colorIndex][0];
       pix[i+1] = skin[colorIndex][1];
       pix[i+2] = skin[colorIndex][2];
-      pix[i+3] = skin[colorIndex][3] == undefined ? 255 : skin[colorIndex][3];
+      pix[i+3] = skin[colorIndex][3];
     }
 
     texture.updatePixels();
@@ -97,6 +91,22 @@ function setup() {
   for (let i in textures) {
     textures[i].loadPixels();
     ogPixels[i] = JSON.parse(JSON.stringify(textures[i].pixels));
+  }
+
+  for (let skinIndex in skins) {
+    let s = skins[skinIndex];
+    s.pixels.loadPixels();
+    s.pixels = s.pixels.pixels;
+    s.data = new Array(s.pixels.length / 4);
+
+    for (let i = 0; i < s.pixels.length; i += 4) {
+      s.data[i / 4] = [
+        s.pixels[i],
+        s.pixels[i+1],
+        s.pixels[i+2],
+        s.pixels[i+3],
+      ];
+    }
   }
 
   setPlayerSkin(localStorage.getItem("currentSkin") || "green");

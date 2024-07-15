@@ -28,3 +28,12 @@ for (let i = 0; i < folders.length; i += 2) {
     textures[path + j] = `assets/images/${path}/${j}.png`;
   }
 }
+let ogPixels = {};
+
+
+let skins = {
+  base: {},
+  green: {},
+  cowboy: {},
+  king: {unlock: () => completedLevels >= levels.length},
+};

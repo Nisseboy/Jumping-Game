@@ -36,7 +36,6 @@ function hsl2rgb(h,s,l) {
    return [f(0) * 255, f(8) * 255, f(4) * 255];
 } 
 
-
 class Game {
   constructor() {
     
