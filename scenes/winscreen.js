@@ -11,7 +11,7 @@ class WinScreen {
     text("Press K to king", width / 2, height / 2 + width / 16);
     pop();
   }
-  keyReleased(e) {
+  keyPressed(e) {
     if (e.keyCode == getKey("Exit")) setScene(mainMenu);
   }
 }

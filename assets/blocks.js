@@ -38,6 +38,6 @@ let blocks = [
       stroke(0);
       line(pos.x + pos.z / 2, pos.y + pos.w / 2, pos.x + pos.z / 2 + Math.cos(a) * size / 2, pos.y + pos.w / 2 + Math.sin(a) * size / 2);
     },
-    defaultData: {a: 0, rps: 0.5, sps: 10},
+    defaultData: {a: 0, rps: 0.4, sps: 4},
   },
 ];

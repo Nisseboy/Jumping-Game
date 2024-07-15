@@ -56,8 +56,25 @@ class LevelSelector {
         y += w + 20;
       }
     }
+
+    if (this.scene == editor) {
+      textButtons.push({
+        x: 0,
+        y: height - 70,
+        h: 70,
+        c: "#ff00ff",
+        text: "FROM CLIPBOARD",
+
+        callback: e => {
+          navigator.clipboard.readText().then(e => {
+            editor.setLevel({index: 80085, data: e});
+            setScene(editor);
+          });
+        }
+      });
+    }
   }
-  keyReleased(e) {
+  keyPressed(e) {
     if (e.keyCode == getKey("Exit")) setScene(mainMenu);
   }
 }

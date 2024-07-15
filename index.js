@@ -204,8 +204,8 @@ function draw() {
 
     noFill();
     stroke(i.c);
-    strokeWeight(5);
-    rect(i.x, i.y, i.text.length / i.h * 2900, i.h * 0.82);
+    strokeWeight(i.strokeWeight || 5);
+    rect(i.x, i.y, i.w || (i.text.length / i.h * 2900), i.h * 0.82);
 
     fill(i.c);
     strokeWeight(1);
@@ -216,7 +216,7 @@ function draw() {
     buttons.push({
       x: i.x, 
       y: i.y, 
-      w: i.text.length / i.h * 2900, 
+      w: i.w || (i.text.length / i.h * 2900), 
       h: i.h * 0.82,
       callback: i.callback,
     });

@@ -59,16 +59,16 @@ class Editor {
       x: 20,
       y: 20,
       h: 71,
-      c: "#4060bf",
+      c: "#ff00ff",
       callback: e => {game.setLevel({data: this.world.export(), index: 80085}); setScene(game)}
     });
     textButtons.push({
-      text: "EXPORT",
+      text: "TO CLIPBOARD",
       x: 20,
       y: 90,
       h: 71,
-      c: "#4060bf",
-      callback: e => {console.log("/**/'" + this.world.export() + "',")}
+      c: "#ff00ff",
+      callback: e => {navigator.clipboard.writeText(this.world.export()); this.enterState = 0; framesEvents.push({length: enterTime + 1, callback: e => {this.enterState++;}});}
     });
 
 
@@ -102,6 +102,7 @@ class Editor {
   mousePressed(e) {
     this.dragged = this.hovered;
     this.mouseDownPos = new Vec(mouseX, mouseY);
+    this.propMenu = undefined;
     this.mouseDragged(e);
   }
   mouseDragged(e) {
@@ -172,7 +173,7 @@ class Editor {
 
     let size = width / 32;
 
-    if (this.mouseDownPos.x == mouseX && this.mouseDownPos.y == mouseY) {
+    if (this.mouseDownPos && this.mouseDownPos.x == mouseX && this.mouseDownPos.y == mouseY) {
       if (this.dragged == world.text) {
         let n = prompt("New Text");
         if (n) world.text.text = n;
@@ -187,14 +188,16 @@ class Editor {
         let block = world.g[m.x][m.y];
         if (block[0] == 4) {
           let data = block[1];
-          let p = prompt("Starting angle (0-360)");
-          if (p != "" && p != undefined) data.a = parseFloat(p) / 360 * Math.PI * 2;
 
-          p = prompt("Rotations per second");
-          if (p != "" && p != undefined) data.rps = parseFloat(p);
-
-          p = prompt("Shots per second");
-          if (p != "" && p != undefined) data.sps = parseFloat(p);
+          this.propMenu = {
+            pos: m._addV(new Vec(1.5, 0)),
+            settings: {
+              "Starting angle (0 - 6.28)": [data, "a", Math.PI / 4],
+              "Rotations per second": [data, "rps", 0.2],
+              "Shots per second": [data, "sps", 0.2],
+            },
+            w: 450,
+          };
         }
       }
     }
@@ -276,6 +279,52 @@ class Editor {
       rect((pos.x - this.cam.x) * size, (pos.y - this.cam.y) * size, size, size);
     }
     pop();
+
+    push();
+    if (this.propMenu) {
+      let sPos = this.propMenu.pos._subV(this.cam).mul(size);
+      let w = this.propMenu.w;
+      let sh = 20;
+
+      textSize(sh);
+      textAlign(LEFT, TOP);
+
+      fill(255);
+      rect(sPos.x - 10, sPos.y - 10, w + 20, Object.keys(this.propMenu.settings).length * sh + 20);
+      fill(0);
+
+      for (let i in this.propMenu.settings) {
+        let s = this.propMenu.settings[i];
+
+        text(i, sPos.x, sPos.y);
+
+        textButtons.push({
+          x: sPos.x + w - sh,
+          y: sPos.y,
+          w: sh,
+          h: sh,
+          strokeWeight: 1,
+          text: ">",
+          c: 0,
+          callback: () => {s[0][s[1]] += s[2]},
+        });
+        textButtons.push({
+          x: sPos.x + w - sh * 8,
+          y: sPos.y,
+          w: sh,
+          h: sh,
+          strokeWeight: 1,
+          text: "<",
+          c: 0,
+          callback: () => {s[0][s[1]] -= s[2]},
+        });
+
+        text(s[0][s[1]], sPos.x + w - sh * 6.5, sPos.y);
+
+        sPos.y += sh;
+      }
+    }
+    pop();
   }
   noiseEffect() {
     background(this.theme[1]);
@@ -295,7 +344,8 @@ class Editor {
     image(img, 0, 0, width, height);
   }
 
-  keyReleased(e) {
+
+  keyPressed(e) {
     if (e.keyCode == getKey("Exit")) setScene(mainMenu);
   }
 

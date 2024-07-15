@@ -77,15 +77,15 @@ class Game {
       this.restart();
     }
 
-    if (e.keyCode == getKey("Kobojsarläge")) nextSkin();
-  }
-  keyReleased(e) {
-    let p = this.world.player;
-
     if (e.keyCode == getKey("Exit")) {
       if (this.level.index == 80085) { setScene(editor); return; }
       setScene(mainMenu);
     }
+
+    if (e.keyCode == getKey("Kobojsarläge")) nextSkin();
+  }
+  keyReleased(e) {
+    let p = this.world.player;
 
     if (e.keyCode == getKey("Jump") && p.inJump && p.vel.y < 0) {
       p.vel.y *= 0.5;
