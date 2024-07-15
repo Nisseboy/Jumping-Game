@@ -35,5 +35,6 @@ let skins = {
   base: {},
   green: {},
   cowboy: {},
+  shrek: {unlock: () => completedLevels > 23},
   king: {unlock: () => completedLevels >= levels.length},
 };
