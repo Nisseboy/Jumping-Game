@@ -26,7 +26,7 @@ let blocks = [
   {//Turret
     outline: false,
     shoot: true,
-    hitbox: "none",
+    hitbox: "circle",
     draw: (pos, data) => {
       let size = width / (scene == editor ? 32 : 16);
 
@@ -39,5 +39,10 @@ let blocks = [
       line(pos.x + pos.z / 2, pos.y + pos.w / 2, pos.x + pos.z / 2 + Math.cos(a) * size / 2, pos.y + pos.w / 2 + Math.sin(a) * size / 2);
     },
     defaultData: {a: 0, rps: 0.4, sps: 4},
+  },
+  {//Bouncy plate
+    launch: 13,
+    outline: false,
+    draw: (pos, data) => {rect(pos.x, pos.y, pos.z, pos.w); ellipse(pos.x + pos.z / 2, pos.y - pos.w / 10, pos.z, pos.w / 10)}
   },
 ];

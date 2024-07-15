@@ -58,7 +58,8 @@ function nextSkin() {
   if (keys[index] == "base") nextSkin();
 }
 function setPlayerSkin(skinName) {
-  let skin = skins[skinName].data;
+  let skin = skins[skinName]?.data;
+  if (!skin) {nextSkin(); return;}
 
   for (let textureIndex in textures) {
     let texture = textures[textureIndex];

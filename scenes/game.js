@@ -212,8 +212,6 @@ class Game {
     let w = this.world;
     let p = w.player;
 
-    let step = 0.005;
-
     function allPointsHave(colls, prop) {
       let have = true;
       for (let i of colls) {
@@ -224,7 +222,14 @@ class Game {
 
     p.walled = 0;
 
-    for (let i = 0; i < Math.abs(p.vel.x); i += step) {
+    let step = 0.005;
+    let i = Math.abs(p.vel.x);
+    while (i > 0) {
+      i -= step;
+      if (i < 0) {
+        step += i;
+        i = 0;
+      }
       p.pos.x += step * Math.sign(p.vel.x);
 
       let colls = this.doesCollide({x: p.pos.x - playerW / 2, y: p.pos.y - playerH, z: playerW, w: playerH});
@@ -259,7 +264,14 @@ class Game {
       break;
     }
 
-    for (let i = 0; i < Math.abs(p.vel.y); i += step) {
+    step = 0.005;
+    i = Math.abs(p.vel.y);
+    while (i > 0) {
+      i -= step;
+      if (i < 0) {
+        step += i;
+        i = 0;
+      }
       p.pos.y += step * Math.sign(p.vel.y);
 
       let colls = this.doesCollide({x: p.pos.x - playerW / 2, y: p.pos.y - playerH, z: playerW, w: playerH});
@@ -272,11 +284,19 @@ class Game {
       if (allPointsHave(colls, "bounce")) {
         p.pos.y -= step * Math.sign(p.vel.y);
         p.vel.y *= -bounceFactor;
-        p.dash *= -1;
         continue;
       }
 
       if (point == 2 || point == 3) {
+        let a = blocks[block[0]].launch || 0;
+        let b = blocks[colls[1]?.block[0] || 0]?.launch || 0;
+        if (a || b) {
+          p.pos.y -= step * Math.sign(p.vel.y);
+          p.vel.y = -Math.max(a, b) / fps;
+          continue;
+        }
+        
+
         p.grounded = coyoteTime * fps;
         p.inJump = false;
 
@@ -436,6 +456,7 @@ class Game {
       let p = this.particles[i];
       p.time--;
       p.rot = (p.rot || 0) + (p.rps || 0) / fps * Math.PI * 2;
+      if (p.shrink) p.size -= p.shrink;
 
       if (p.vel) { 
         p.vel.addV(new Vec(0, gravity * p.gravity / fps));
@@ -454,10 +475,23 @@ class Game {
           if ((p.pos.x - player.pos.x) ** 2 + (p.pos.y - player.pos.y + playerH / 2) ** 2 < playerW ** 2) {
             this.restart();
           }
+
+          if (frameCount % 7 == 0)
+          this.particles.push({
+            pos: p.pos.copy(),
+            size: p.size,
+            time: 20,
+            shrink: 0.01,
+            c: p.c,
+            rps: p.rps + Math.random() * 1 - 0.5,
+            vel: new Vec(0, 0),
+  
+            gravity: 0,
+          });
         }
       }
 
-      if (p.time == 0) { this.particles.splice(i, 1); i--; }
+      if (p.time == 0 || p.size < 0) { this.particles.splice(i, 1); i--; }
     }
   }
 
@@ -501,11 +535,11 @@ class Game {
 
         if (this.enterState > enterTime && blocks[block[0]].shoot) {
           let data = block[1];
-          let a = data.a + data.rps * Math.PI * 2 * (scene == editor ? 0 : this.time) / fps;
+          let a = data.a + data.rps * Math.PI * 2 * (scene == editor ? 0 : (this.time - 1)) / fps;
 
           let dir = new Vec(Math.cos(a), Math.sin(a));
 
-          if (this.time % Math.floor(fps / data.sps) == 0) {
+          if ((this.time - 1) % Math.floor(fps / data.sps) == 0) {
             this.particles.push({
               pos: new Vec(x + 0.5, y + 0.5).addV(dir._mul(0.5)),
               size: 1 / 8,
