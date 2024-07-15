@@ -316,6 +316,8 @@ class Game {
     let hit = false;
 
     for (let i = 0; i < Math.abs(vel.x); i += step) {
+      if (Math.abs(vel.x) < 0.000001) break;
+
       pos.x += step * Math.sign(vel.x);
 
       let colls = this.doesCollide({x: pos.x, y: pos.y, z: 0, w: 0});
@@ -328,6 +330,8 @@ class Game {
     }
 
     for (let i = 0; i < Math.abs(vel.y); i += step) {
+      if (Math.abs(vel.y) < 0.000001) break;
+
       pos.y += step * Math.sign(vel.y);
 
       let colls = this.doesCollide({x: pos.x, y: pos.y, z: 0, w: 0});
@@ -474,7 +478,7 @@ class Game {
       rotate(i.rot);
       noStroke();
       fill(i.c);
-      rect(-i.size / 2, -i.size / 2, i.size * size, i.size * size);
+      rect(-i.size / 2 * size, -i.size / 2 * size, i.size * size, i.size * size);
       pop();
     }
 
