@@ -1,26 +1,4 @@
-let playerW = 6 / 16;
-let playerH = 11 / 16;
-
 let keyPickupRange = 0.7;
-
-let playerSpeed = 7;
-
-let playerJumpStrength = 12;
-let graceTime = 1 / 10;
-let coyoteTime = 1 / 10;
-
-let playerDashTime = 0.25;
-let playerDashSpeed = 20;
-let dashGraceTime = 1 / 10;
-let dashCooldown = 0.5;
-
-let wallJumpStrength = 4;
-let wallJumpTime = 1 / 5;
-
-let gravity = 0.6;
-let maxFallSpeed = 0.3;
-
-let bounceFactor = 0.9;
 
 let enterTime = 24;
 
@@ -68,10 +46,10 @@ class Game {
     let p = this.world.player;
 
     if (e.keyCode == getKey("Jump") && this.enterState > enterTime) {
-      p.graceTime = graceTime * fps;
+      p.inputJump();
     }
     if (e.keyCode == getKey("Dash") && this.enterState > enterTime && this.unlockDash) {
-      p.dashGraceTime = dashGraceTime * fps;
+      p.inputDash();
     }
     if (e.keyCode == getKey("Restart")) {
       this.restart();
@@ -87,14 +65,49 @@ class Game {
   keyReleased(e) {
     let p = this.world.player;
 
-    if (e.keyCode == getKey("Jump") && p.inJump && p.vel.y < 0) {
-      p.vel.y *= 0.5;
+    if (e.keyCode == getKey("Jump")) {
+      p.inputJumpEnd();
     }
   }
 
   update() {
+    let world = game.world;
+    let player = world.player;
+    let size = width / 16;
+
     if (this.enterState > enterTime) {
-      this.updatePlayer();
+      this.world.player.update();
+      
+      if (!world.key.pickedUp && (world.key.pos.x - player.pos.x) ** 2 + (world.key.pos.y - player.pos.y + playerH / 2) ** 2 < keyPickupRange ** 2) {
+        world.key.pickedUp = true;
+        framesEvents.push({length: 6, callback: e => {this.doorState ++}});
+      }
+      if (world.key.pickedUp && (world.door.pos.x - player.pos.x + 0.5) ** 2 + (world.door.pos.y - player.pos.y + 1) ** 2 < 0.5 ** 2) {
+        if (this.level.index == 80085) { setScene(editor); editor.world.goldTime.time = this.time / fps; return; }
+  
+        if (completedLevels < this.level.index + 1) {
+          completedLevels = this.level.index + 1;
+          localStorage.setItem("completedLevels", completedLevels);
+        }
+        levelTimes[this.level.index] = Math.min(levelTimes[this.level.index] || 99999, this.time / fps);
+        localStorage.setItem("levelTimes", JSON.stringify(levelTimes));
+  
+        if (this.level.index == levels.length - 1) {
+          setScene(winScreen);
+          return;
+        }
+  
+        this.setLevel({data: levels[this.level.index + 1], index: this.level.index + 1});
+        return;
+      }
+
+      this.cam.mul(cameraSmoothing);
+      this.cam.addV(player.pos.copy().subV(new Vec(8, 6)).mul(1 - cameraSmoothing));
+  
+      this.cam.x = Math.max(this.cam.x, 0);
+      this.cam.x = Math.min(this.cam.x, world.w - 16);
+      this.cam.y = Math.max(this.cam.y, 0);
+      this.cam.y = Math.min(this.cam.y, world.h - 9);
 
       this.time++;
     }
@@ -106,229 +119,6 @@ class Game {
   
   restart() {
     this.setLevel(this.level);
-  }
-
-  updatePlayer() {
-    let world = this.world;
-    let player = world.player;
-
-    let size = width / 16;
-
-    if (player.graceTime && (player.grounded || player.walled)) {
-      player.vel.y = -playerJumpStrength / fps;
-      player.inJump = true;
-
-      if (!player.grounded) {
-        player.vel.x += wallJumpStrength / fps * -player.walled;
-        if (player.walled) player.inWallJump = wallJumpTime * fps * player.walled;
-      }
-
-      player.graceTime = 0;
-      player.grounded = 0;
-    }
-
-
-    let wallJumpFactor = (Math.abs(player.inWallJump) / wallJumpTime / fps);
-    player.vel.x *= wallJumpFactor;
-    
-    if (getKeyPressed("Move Left") && !getKeyPressed("Move Right") && player.inWallJump >= 0) {
-      player.vel.x = -playerSpeed / fps;
-    }
-    if (getKeyPressed("Move Right") && !getKeyPressed("Move Left") && player.inWallJump <= 0) {
-      player.vel.x = playerSpeed / fps;
-    }
-
-
-    if (player.dashGraceTime && !player.dashCooldown) {
-      player.dash = playerDashTime * fps * (getKeyPressed("Move Right") - getKeyPressed("Move Left"));
-
-      player.dashCooldown = dashCooldown * fps;
-      player.dashGraceTime = 0;
-    }
-    if (player.dash) {
-      player.vel.x = Math.sign(player.dash) * playerDashSpeed / fps;
-    }
-
-
-    if (player.grounded) player.grounded--;
-    if (player.inWallJump) player.inWallJump -= Math.sign(player.inWallJump);
-    if (player.graceTime) player.graceTime--;
-
-    if (player.dashGraceTime) player.dashGraceTime--;
-    if (player.dashCooldown) player.dashCooldown--;
-    if (player.dash) player.dash -= Math.sign(player.dash);
-
-
-    let maxFallSpeed_ = maxFallSpeed;
-
-    player.vel.y += gravity / fps;
-    if (player.inJump && player.vel.y > 0) {
-      player.vel.y += gravity / fps / 4;
-    }
-    if (player.walled) {
-      maxFallSpeed_ = 0.05;
-    }
-
-    if (player.vel.y > maxFallSpeed_) {
-      player.vel.y = maxFallSpeed_;
-    }
-
-    if (player.dash) { player.vel.y = 0; }
-    game.movePlayer();
-
-    if (!world.key.pickedUp && (world.key.pos.x - player.pos.x) ** 2 + (world.key.pos.y - player.pos.y + playerH / 2) ** 2 < keyPickupRange ** 2) {
-      world.key.pickedUp = true;
-      framesEvents.push({length: 6, callback: e => {this.doorState ++}});
-    }
-    if (world.key.pickedUp && (world.door.pos.x - player.pos.x + 0.5) ** 2 + (world.door.pos.y - player.pos.y + 1) ** 2 < 0.5 ** 2) {
-      if (this.level.index == 80085) { setScene(editor); editor.world.goldTime.time = this.time / fps; return; }
-
-      if (completedLevels < this.level.index + 1) {
-        completedLevels = this.level.index + 1;
-        localStorage.setItem("completedLevels", completedLevels);
-      }
-      levelTimes[this.level.index] = Math.min(levelTimes[this.level.index] || 99999, this.time / fps);
-      localStorage.setItem("levelTimes", JSON.stringify(levelTimes));
-
-      if (this.level.index == levels.length - 1) {
-        setScene(winScreen);
-        return;
-      }
-
-      this.setLevel({data: levels[this.level.index + 1], index: this.level.index + 1});
-      return;
-    }
-
-    this.cam.mul(cameraSmoothing);
-    this.cam.addV(player.pos.copy().subV(new Vec(8, 6)).mul(1 - cameraSmoothing));
-
-    this.cam.x = Math.max(this.cam.x, 0);
-    this.cam.y = Math.max(this.cam.y, 0);
-    this.cam.x = Math.min(this.cam.x, world.w - 16);
-    this.cam.y = Math.min(this.cam.y, world.h - 9);
-  }
-
-  movePlayer() {
-    let w = this.world;
-    let p = w.player;
-
-    function allPointsHave(colls, prop) {
-      let have = true;
-      for (let i of colls) {
-        if (!blocks[i.block[0]][prop]) have = false;
-      }
-      return have;
-    }
-
-    p.walled = 0;
-
-    let step = 0.005;
-    let i = Math.abs(p.vel.x);
-    while (i > 0) {
-      i -= step;
-      if (i < 0) {
-        step += i;
-        i = 0;
-      }
-      p.pos.x += step * Math.sign(p.vel.x);
-
-      let colls = this.doesCollide({x: p.pos.x - playerW / 2, y: p.pos.y - playerH, z: playerW, w: playerH});
-      if (colls.length == 0) continue;
-
-      let coll = colls[0];
-      let block = coll.block;
-      let point = coll.point;
-
-      if (allPointsHave(colls, "bounce")) {
-        p.pos.x -= step * Math.sign(p.vel.x);
-        p.vel.x *= -bounceFactor;
-        p.dash *= -1;
-        continue;
-      }
-
-      if (point == 0 || point == 2) {
-        p.walled = -1;
-      }
-      else {
-        p.walled = 1;
-      }
-
-      if (allPointsHave(colls, "hurt")) {
-        this.restart();
-      }
-
-      p.pos.x -= step * Math.sign(p.vel.x);
-      p.vel.x = 0;
-      if (this.unlockWallJump) p.inJump = false;
-      if (p.dash) p.dash = undefined;
-      break;
-    }
-
-    step = 0.005;
-    i = Math.abs(p.vel.y);
-    while (i > 0) {
-      i -= step;
-      if (i < 0) {
-        step += i;
-        i = 0;
-      }
-      p.pos.y += step * Math.sign(p.vel.y);
-
-      let colls = this.doesCollide({x: p.pos.x - playerW / 2, y: p.pos.y - playerH, z: playerW, w: playerH});
-      if (colls.length == 0) continue;
-
-      let coll = colls[0];
-      let block = coll.block;
-      let point = coll.point;
-
-      if (allPointsHave(colls, "bounce")) {
-        p.pos.y -= step * Math.sign(p.vel.y);
-        p.vel.y *= -bounceFactor;
-        continue;
-      }
-
-      if (point == 2 || point == 3) {
-        let a = blocks[block[0]].launch || 0;
-        let b = blocks[colls[1]?.block[0] || 0]?.launch || 0;
-        if (a || b) {
-          p.pos.y -= step * Math.sign(p.vel.y);
-          p.vel.y = -Math.max(a, b) / fps;
-          continue;
-        }
-        
-
-        p.grounded = coyoteTime * fps;
-        p.inJump = false;
-
-        for (let j = 0; j < Math.abs(p.vel.y * 50); j++) {
-          if (j == 0) continue;
-          this.particles.push({
-            pos: p.pos._subV(new Vec(0, step * Math.sign(p.vel.y))),
-            size: 1 / 16,
-            time: Math.floor(Math.random() * 40) + 40,
-            c: this.theme[1],
-            rps: 0.5,
-            vel: new Vec(Math.random() * 0.04 - 0.02, Math.random() * 0.02 - 0.02),
-  
-            gravity: 0.1,
-  
-            physics: true,
-          });
-        }
-      }
-
-      if (allPointsHave(colls, "hurt")) {
-        this.restart()
-      }
-
-
-      p.pos.y -= step * Math.sign(p.vel.y);
-      p.vel.y = 0;
-
-      break;
-    }
-
-    if (!this.unlockWallJump) p.walled = 0;
   }
 
   collideMoveVector(pos, vel) {
@@ -420,35 +210,32 @@ class Game {
       });
     }
 
-    if (player.vel.x != 0 && player.grounded && frameCount % 3 == 0) {
-      this.particles.push({
-        pos: player.pos.copy(),
-        size: 6 / size,
-        time: 80,
-        c: this.theme[1],
-        rps: 0.5,
-        vel: new Vec(Math.random() * 0.02 - 0.01, Math.random() * 0.04 - 0.04),
+    for (let x = 0; x < world.w; x++) {
+      for (let y = 0; y < world.h; y++) {
+        let block = world.g[x][y];
+        if (!block[0]) continue;
 
-        gravity: 0.1,
+        if (this.enterState > enterTime && blocks[block[0]].shoot) {
+          let data = block[1];
+          let a = data.a + data.rps * Math.PI * 2 * (scene == editor ? 0 : (this.time - 1)) / fps;
 
-        physics: true,
-      });
-    }
+          let dir = new Vec(Math.cos(a), Math.sin(a));
 
-    if (player.dash) {
-      for (let i = 0; i < 10; i++) {
-        this.particles.push({
-          pos: player.pos._subV(new Vec(0, playerH * i / 10)),
-          size: 6 / size,
-          time: 80,
-          c: 255,
-          rps: 0.5,
-          vel: new Vec(Math.random() * 0.02 - 0.01, Math.random() * 0.04 - 0.04),
+          if ((this.time - 1) % Math.floor(fps / data.sps) == 0) {
+            this.particles.push({
+              pos: new Vec(x + 0.5, y + 0.5).addV(dir._mul(0.5)),
+              size: 1 / 8,
+              time: 6000,
+              c: [255, 100, 100],
+              rps: 0.2,
+              vel: dir._div(30),
+      
+              gravity: 0,
 
-          gravity: 0.1,
-
-          physics: true,
-        });
+              physics: "bullet",
+            });
+          }
+        }
       }
     }
 
@@ -532,28 +319,6 @@ class Game {
         noFill();
         if (blocks[block[0]].outline) rect((x - this.cam.x) * size, (y - this.cam.y) * size, size + 0.5, size + 0.5);
         pop();
-
-        if (this.enterState > enterTime && blocks[block[0]].shoot) {
-          let data = block[1];
-          let a = data.a + data.rps * Math.PI * 2 * (scene == editor ? 0 : (this.time - 1)) / fps;
-
-          let dir = new Vec(Math.cos(a), Math.sin(a));
-
-          if ((this.time - 1) % Math.floor(fps / data.sps) == 0) {
-            this.particles.push({
-              pos: new Vec(x + 0.5, y + 0.5).addV(dir._mul(0.5)),
-              size: 1 / 8,
-              time: 6000,
-              c: [255, 100, 100],
-              rps: 0.2,
-              vel: dir._div(30),
-      
-              gravity: 0,
-
-              physics: "bullet",
-            });
-          }
-        }
       }
     }
     if (this.enterState <= enterTime) return;

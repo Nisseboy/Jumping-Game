@@ -40,22 +40,7 @@ class World {
       };
     }
 
-    this.player = {
-      pos: new Vec().from(this.player.pos),
-      vel: new Vec(0, 0),
-      grounded: 0,
-      graceTime: 0,
-      walled: 0,
-      
-      inJump: false,
-      inWallJump: 0,
-
-      lastDir: 1,
-
-      dashGrace: 0,
-      dash: 0,
-      dashCooldown: 0,
-    };
+    this.player = new Player(this.player.pos);
 
     this.key = {
       pos: new Vec().from(this.key.pos),
