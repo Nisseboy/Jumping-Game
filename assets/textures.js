@@ -21,6 +21,7 @@ let skins = {
   base: {},
   green: {},
   cowboy: {},
+  ninja: {unlock: () => completedLevels > 15},
   shrek: {unlock: () => completedLevels > 23},
   king: {unlock: () => completedLevels >= levels.length},
   kingking: {unlock: () => {let unlocked = true; for (let i = 0; i < levels.length; i++) {if (levelTimes[i] || 999 >= (JSON.parse(levels[i]).goldTime?.time || 0) + 0.01) unlocked = false} return unlocked}},
