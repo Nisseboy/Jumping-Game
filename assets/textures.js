@@ -23,7 +23,7 @@ let skins = {
   cowboy: {},
   shrek: {unlock: () => completedLevels > 23},
   king: {unlock: () => completedLevels >= levels.length},
-  kingking: {unlock: () => {let unlocked = true; for (let i = 0; i < levels.length; i++) {if (levelTimes[i] >= (JSON.parse(levels[i]).goldTime?.time || 999) + 0.01) unlocked = false} return unlocked}},
+  kingking: {unlock: () => {let unlocked = true; for (let i = 0; i < levels.length; i++) {if (levelTimes[i] || 999 >= (JSON.parse(levels[i]).goldTime?.time || 0) + 0.01) unlocked = false} return unlocked}},
 };
 
 let textures = {
